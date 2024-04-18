@@ -14,23 +14,27 @@ update = True
 
 accelerationConstant = 24
 maxAccel = 9
-targetMaxVelocity = 2
+targetMaxVelocity = 5
 wallProximity = 50
-seekerVelocity = 4
+seekerVelocity = 8
 
 targetProperties = Entity(1200,400,10,4,0,0, 0)
 targetPos = pygame.Vector2(targetProperties.getPosition()[0], targetProperties.getPosition()[1])
 
-PNProperties = Entity(0, 350, 12, 0, 0, 0, 0)  
+PNProperties = Entity(0, 350, 12, 0, 0, 0, 0)   
 PNPos = pygame.Vector2(PNProperties.getPosition()[0], PNProperties.getPosition()[1])
 PNMissile = [PNProperties,PNPos,"PN","green"]
 
+APNProperties = Entity(0, 350, 12, 0, 0, 0, 0)  
+APNPos = pygame.Vector2(APNProperties.getPosition()[0], APNProperties.getPosition()[1])
+APNMissile = [APNProperties,APNPos,"APN","orange"]
+
 ZEMAPNProperties = Entity(0, 350, 12, 0, 0, 0, 0)  
-APNPos = pygame.Vector2(ZEMAPNProperties.getPosition()[0], ZEMAPNProperties.getPosition()[1])
-APNMissile = [ZEMAPNProperties,APNPos,"ZEMAPN","red"]
+ZEMAPNPos = pygame.Vector2(ZEMAPNProperties.getPosition()[0], ZEMAPNProperties.getPosition()[1])
+ZEMAPNMissile = [ZEMAPNProperties,ZEMAPNPos,"ZEMAPN","red"]
 
 
-allSeekers = [PNMissile, APNMissile]
+allSeekers = [PNMissile, ZEMAPNMissile, APNMissile]
 
 frames = 0
 

@@ -58,59 +58,58 @@ def getAcceleration(seeker, targetPos,targetProperties,seekerProperties):
     seekerName = seeker[2]
 
     if seekerName == "PN":
-        return CalculatePN(seekerPos,targetPos)
+        return CalculatePN(seekerPos,targetPos,targetProperties, seekerProperties)
     if seekerName == "ZEMAPN":
         return CalculateZEMAPN(seekerPos,targetPos,targetProperties, seekerProperties)
+    if seekerName == "APN":
+        return CalculateAPN(seekerPos,targetPos,targetProperties, seekerProperties)
     return [0,0]
 
 def vectorReject(A,B):
     return A-(B*(np.dot(A,B)))
 
-previousLOSPN = None
-def CalculatePN(seekerPos,targetPos):
-    global previousLOSPN
-    N = 50
-
-    LOS = targetPos - seekerPos
-
-    normLOS = np.linalg.norm(LOS)
-    LOS = LOS/normLOS
-
-    if previousLOSPN == None:
-        previousLOSPN = LOS
-        return (0,0)
-    
-    LOSDelta = LOS - previousLOSPN
-
-    LOSRate = np.linalg.norm(LOSDelta)
-    
-    closingVel = -LOSRate
-
-    acceleration = N * closingVel
-        
-    previousLOSPN = LOS
-
-    acceleration = [-acceleration*LOS[0], -acceleration*LOS[1]]
-
-    return (acceleration)
-
-lastY = [0,0]
-def CalculateZEMAPN(targetPos,seekerPos, seekerProperties, targetProperties):
-    global lastY
-    N = 1
-
+lastYAPN = [0,0]
+def CalculateAPN(targetPos,seekerPos, targetProperties, seekerProperties):
+    global lastYAPN
+    N = .3
 
     Rtm = np.sqrt(np.power((targetPos[0] - seekerPos[0]),2) + np.power((targetPos[1] - seekerPos[1]),2))
-    Vc = np.linalg.norm(targetProperties.getVelocity()-seekerProperties.getVelocity())
+    Vc = np.linalg.norm(seekerProperties.getVelocity()-targetProperties.getVelocity())
+
+    y = targetPos-seekerPos
+
+    sinLOS = y/Rtm
+    Nt = vectorReject(seekerProperties.getAcceleration(),targetProperties.getAcceleration())
+    acceleration = -((N*Vc*sinLOS) + ((N*Nt)/2))
+
+    lastYAPN = y
+    return acceleration
+
+def CalculatePN(targetPos,seekerPos, targetProperties, seekerProperties):
+    N = 2
+    y = targetPos-seekerPos
+    Rtm = np.sqrt(np.power((targetPos[0] - seekerPos[0]),2) + np.power((targetPos[1] - seekerPos[1]),2))
+    sinLOS = y/Rtm
+    acceleration = -N*sinLOS
+
+    return acceleration
+
+lastYZEMAPN = [0,0]
+def CalculateZEMAPN(targetPos,seekerPos, targetProperties, seekerProperties):
+    global lastYZEMAPN
+    N = 1
+
+    Rtm = np.sqrt(np.power((targetPos[0] - seekerPos[0]),2) + np.power((targetPos[1] - seekerPos[1]),2))
+    Vc = np.linalg.norm(seekerProperties.getVelocity()-targetProperties.getVelocity())
     tGO = Rtm / Vc
 
     y = targetPos-seekerPos
-    yprime = y-lastY
+    yprime = y-lastYZEMAPN
     zem = y + yprime*tGO
 
-    Nt = vectorReject(targetProperties.getAcceleration(),seekerProperties.getAcceleration())
+    Nt = vectorReject(seekerProperties.getAcceleration(),targetProperties.getAcceleration())
     acceleration = -((N*zem)/np.power(tGO,2)) + ((N*Nt)/2)
 
-    lastY = y
+    lastYZEMAPN = y
     return acceleration
     
