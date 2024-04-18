@@ -27,7 +27,7 @@ PNMissile = [PNProperties,PNPos,"PN","green"]
 
 ZEMAPNProperties = Entity(0, 350, 12, 0, 0, 0, 0)  
 APNPos = pygame.Vector2(ZEMAPNProperties.getPosition()[0], ZEMAPNProperties.getPosition()[1])
-APNMissile = [ZEMAPNProperties,APNPos,"ZEMAassssasPN","red"]
+APNMissile = [ZEMAPNProperties,APNPos,"ZEMAPN","red"]
 
 
 allSeekers = [PNMissile, APNMissile]
