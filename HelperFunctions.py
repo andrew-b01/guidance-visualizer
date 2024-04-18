@@ -59,8 +59,9 @@ def getAcceleration(seeker, targetPos,targetProperties,seekerProperties):
 
     if seekerName == "PN":
         return CalculatePN(seekerPos,targetPos)
-    if seekerName == "APN":
-        return CalculateAPN(seekerPos,targetPos,targetProperties, seekerProperties)
+    if seekerName == "ZEMAPN":
+        return CalculateZEMAPN(seekerPos,targetPos,targetProperties, seekerProperties)
+    return [0,0]
 
 def vectorReject(A,B):
     return A-(B*(np.dot(A,B)))
@@ -68,7 +69,7 @@ def vectorReject(A,B):
 previousLOSPN = None
 def CalculatePN(seekerPos,targetPos):
     global previousLOSPN
-    N = 125
+    N = 50
 
     LOS = targetPos - seekerPos
 
@@ -93,34 +94,23 @@ def CalculatePN(seekerPos,targetPos):
 
     return (acceleration)
 
-lastHeading = 0
-def CalculateAPN(seekerPos,targetPos, targetProperties, seekerProperties):
-    global lastHeading 
+lastY = [0,0]
+def CalculateZEMAPN(targetPos,seekerPos, seekerProperties, targetProperties):
+    global lastY
     N = 1
-    range = targetPos - seekerPos
-    rangeMagnitude = np.linalg.norm(range)
 
-    heading = np.arctan2(range[1],range[0])
 
-    dheading = (lastHeading-heading)/.015
+    Rtm = np.sqrt(np.power((targetPos[0] - seekerPos[0]),2) + np.power((targetPos[1] - seekerPos[1]),2))
+    Vc = np.linalg.norm(targetProperties.getVelocity()-seekerProperties.getVelocity())
+    tGO = Rtm / Vc
 
-    velocity = targetProperties.getVelocity()-seekerProperties.getVelocity()
-    closingVelocity = np.linalg.norm(velocity)
+    y = targetPos-seekerPos
+    yprime = y-lastY
+    zem = y + yprime*tGO
 
-    rangeUnitVector = range / np.linalg.norm(range)
+    Nt = vectorReject(targetProperties.getAcceleration(),seekerProperties.getAcceleration())
+    acceleration = -((N*zem)/np.power(tGO,2)) + ((N*Nt)/2)
 
-    Vn = seekerProperties.getVelocity() / np.linalg.norm(seekerProperties.getVelocity())
-
-    normalTargetAcc = vectorReject(targetProperties.getAcceleration(),rangeUnitVector)
-
-    tgo = -np.linalg.norm(range)/np.dot(velocity,rangeUnitVector)
-
-    nc = N*dheading*closingVelocity
-    nc = nc+N*(.5*np.dot(normalTargetAcc,[range[1],-range[0]]))
-    cmd = [range[1]*nc,-range[0]*nc]
-    acceleration = vectorReject(cmd,Vn)
-
-    lastHeading = heading
-
+    lastY = y
     return acceleration
     

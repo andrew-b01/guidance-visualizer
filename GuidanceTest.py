@@ -13,21 +13,24 @@ dt = 0
 update = True
 
 accelerationConstant = 24
-maxAccel = 7
+maxAccel = 9
 targetMaxVelocity = 2
-wallProximity = 200
-seekerVelocity = 6
+wallProximity = 50
+seekerVelocity = 4
 
-targetProperties = Entity(1200,400,5,5,0,0, 0)
+targetProperties = Entity(1200,400,10,4,0,0, 0)
 targetPos = pygame.Vector2(targetProperties.getPosition()[0], targetProperties.getPosition()[1])
 
-PNProperties = Entity(0, 350, 4, 0, 0, 0, 0)  
+PNProperties = Entity(0, 350, 12, 0, 0, 0, 0)  
 PNPos = pygame.Vector2(PNProperties.getPosition()[0], PNProperties.getPosition()[1])
 PNMissile = [PNProperties,PNPos,"PN","green"]
 
+ZEMAPNProperties = Entity(0, 350, 12, 0, 0, 0, 0)  
+APNPos = pygame.Vector2(ZEMAPNProperties.getPosition()[0], ZEMAPNProperties.getPosition()[1])
+APNMissile = [ZEMAPNProperties,APNPos,"ZEMAassssasPN","red"]
 
-allSeekers = [PNMissile]
-# allSeekers = [APNMissile]
+
+allSeekers = [PNMissile, APNMissile]
 
 frames = 0
 
@@ -42,8 +45,14 @@ def drawSeekers(seekers):
 
         if frames % 1 == 0:
             seekerProperties.positionHistory.append([seekerPos.copy(), seekerProperties.getHeading()]) 
-        if frames % 20 == 0:
+        if frames % 2 == 0:
             targetProperties.positionHistory.append([targetPos.copy()])
+
+        if len(seekerProperties.positionHistory) > 250:
+            seekerProperties.positionHistory.pop(0)
+        
+        if len(targetProperties.positionHistory) > 200:
+            targetProperties.positionHistory.pop(0)
 
         for seekerHistory in seekerProperties.positionHistory:
             pygame.draw.circle(screen, color, seekerHistory[0], 2)
@@ -59,7 +68,7 @@ def drawSeekers(seekers):
         
         for targetHistory in targetProperties.positionHistory:
             targetPos = targetHistory[0]
-            pygame.draw.circle(screen, "red", targetPos, 10)
+            pygame.draw.circle(screen, "white", targetPos, 3)
 
 
         rotation = seekerProperties.getHeading()
@@ -82,12 +91,24 @@ while running:
         velocityX = hp.TruncateABSNumber((targetVelocity[0] + targetAcceleration[0]), targetMaxVelocity)
         velocityY = hp.TruncateABSNumber((targetVelocity[1] + targetAcceleration[1]), targetMaxVelocity)
         accelerationX, accelerationY = hp.calculateAcceleration(targetPos.x, targetPos.y, screen.get_width(), screen.get_height(), maxAccel, wallProximity, accelerationConstant)
+        
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w]:
+            accelerationY -= .15
+        if keys[pygame.K_s]:
+            accelerationY += .15
+        if keys[pygame.K_a]:
+            accelerationX -= .15
+        if keys[pygame.K_d]:
+            accelerationX += .15
 
         targetPos.x += targetVelocity[0]
         targetPos.y += targetVelocity[1]
         targetProperties.setVelocity(velocityX, velocityY)
         targetProperties.setAcceleration(accelerationX, accelerationY)
         targetProperties.setHeading(hp.calculateHeadingFromVelocity(velocityX, velocityY))
+        targetPos.x = min(max(0,targetPos.x),screen.get_width()-1)
+        targetPos.y = min(max(0,targetPos.y),screen.get_height()-12)
 
         for i, seeker in enumerate(allSeekers):
             seekerProperties = allSeekers[i][0]
@@ -116,14 +137,16 @@ while running:
 
             if abs(seekerPos.x - targetPos.x) < 15 and abs(seekerPos.y - targetPos.y) < 15:
                 update = False
-                running = False
+                # running = False
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    drawSeekers(allSeekers)
+
+
     pygame.draw.circle(screen, "red", targetPos, 10)
+    drawSeekers(allSeekers)
 
 
     pygame.display.flip()
